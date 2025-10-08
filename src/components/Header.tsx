@@ -16,6 +16,8 @@ import {
   NavigationMenuTrigger,
 } from "./ui/navigation-menu";
 import { IoChevronDown } from "react-icons/io5";
+import { useRouter, usePathname } from "next/navigation";
+
 
 // ===================== Type Definitions =====================
 interface SubItem {
@@ -373,6 +375,8 @@ const Arrow45: React.FC = () => (
 );
 
 const Header: React.FC = () => {
+  const router = useRouter();
+  const pathname = usePathname();
   const [activeMenu, setActiveMenu] = useState<string>("");
   const [activeSection, setActiveSection] = useState<string>("Business Solution");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
@@ -384,6 +388,10 @@ const Header: React.FC = () => {
   const navRef = useRef<HTMLElement>(null);
   const headerRef = useRef<HTMLElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     const computeHeaderHeight = () => {
@@ -484,14 +492,14 @@ const Header: React.FC = () => {
                             />
                           </button>
 
-                          {activeMenu === menu.id && (
+                          {activeMenu === menu.id && activeMenuData && (
                             <div
                               ref={menuRef}
                               className="fixed left-0 right-0 top-0 w-[1044px] mx-auto border-t border-gray-200 bg-white rounded-b-xl z-50"
                               style={{ top: headerHeight }}
                             >
                               <div className="w-[900px] xl:w-[1044px] mx-auto px-8 py-10 bg-white rounded-b-xl flex flex-col">
-                                {activeMenuData?.type === "mega" ? (
+                                {activeMenuData.type === "mega" ? (
                                   <div className="grid grid-cols-3 gap-8 w-full max-w-7xl mx-auto">
                                     {/* Categories */}
                                     <div className="col-span-1 border-r pr-6 mb-2">
@@ -509,7 +517,9 @@ const Header: React.FC = () => {
                                             onClick={() => handleSectionChange(section.heading)}
                                           >
                                             <div className="flex items-center gap-2">
-                                              <img src={section.images || ""} alt={section.heading} className="w-4 h-4" />
+                                              {"images" in section && section.images && (
+                                                <img src={section.images} alt={section.heading} className="w-4 h-4" />
+                                              )}
                                               <span>{section.heading}</span>
                                             </div>
                                           </li>
@@ -530,7 +540,7 @@ const Header: React.FC = () => {
                                               key={item.title}
                                               title={item.title}
                                               href={item.href}
-                                              img={item.img}
+                                              img={"img" in item ? item.img : "icon" in item ? item.icon : undefined}
                                               onClick={handleMenuItemClick}
                                             >
                                               {item.description}
@@ -539,7 +549,7 @@ const Header: React.FC = () => {
                                       </ul>
                                     </div>
                                   </div>
-                                ) : activeMenuData?.type === "simple" ? (
+                                ) : activeMenuData.type === "simple" ? (
                                   <div className="w-full max-w-7xl mx-auto mb-2">
                                     <h6 className="pl-2.5 font-semibold uppercase text-sm text-gray-500 mb-6">
                                       Resources
@@ -554,7 +564,7 @@ const Header: React.FC = () => {
                                                 key={i}
                                                 title={item.title}
                                                 href={item.href}
-                                                img={item.icon}
+                                                img={"img" in item ? item.img : "icon" in item ? item.icon : undefined}
                                                 onClick={handleMenuItemClick}
                                               >
                                               </ResourcesListItem>
@@ -564,7 +574,7 @@ const Header: React.FC = () => {
                                       ))}
                                     </div>
                                   </div>
-                                ) : (
+                                ) : activeMenuData.type === "stories" ? (
                                   <div className="w-full max-w-7xl mx-auto mb-4">
                                     <h6 className="pl-2.5 font-semibold uppercase text-sm text-gray-500 mb-6">
                                       Success Stories
@@ -573,14 +583,12 @@ const Header: React.FC = () => {
                                       {activeMenuData.sections.map((section, index) => (
                                         <div key={index} className="border-r last:border-r-0 pr-6 last:pr-0">
                                           <h3 className="font-semibold text-lg mb-2">{section.heading}</h3>
-                                          <p className="text-sm text-gray-500 mb-4">{section.description}</p>
                                           <ul className="space-y-4">
                                             {section.subItems.map((item, i) => (
                                               <SuccessStoriesListItem
                                                 key={i}
                                                 title={item.title}
                                                 href={item.href}
-                                                stats={item.stats}
                                                 onClick={handleMenuItemClick}
                                               >
                                                 {item.description}
@@ -591,7 +599,7 @@ const Header: React.FC = () => {
                                       ))}
                                     </div>
                                   </div>
-                                )}
+                                ) : null}
 
                                 {/* CTA */}
                                 <div className="mt-auto -mx-8 -mb-10 bg-[#F7F8FF] flex justify-end py-4 gap-4 rounded-b-xl">
@@ -669,7 +677,7 @@ const Header: React.FC = () => {
                   show={showLangCountryDropdown}
                   setShow={setShowLangCountryDropdown}
                   align="right"
-                  className="hidden md:flex"
+                  className="hidden md:flex" // ✅ now works
                 />
 
                 <button
@@ -685,7 +693,6 @@ const Header: React.FC = () => {
             </div>
           </div>
 
-          {/* Mobile Menu */}
           {isMobileMenuOpen && (
             <div className="xl:hidden fixed top-[70px] md:top-[80px] left-0 w-full h-screen overflow-y-auto bg-white px-6 md:px-[32px] py-4 z-[999]">
               <Accordion type="single" collapsible className="w-full">
@@ -698,8 +705,11 @@ const Header: React.FC = () => {
                       <Accordion type="single" collapsible className="pl-4">
                         {sections.map((section, sectionIndex) => (
                           <AccordionItem key={sectionIndex} value={`${id}-${section.heading}`}>
-                            <AccordionTrigger className="fflex items-center justify-start gap-2 text-gray-700 font-medium">
-                              {section.images && <img src={section.images} alt={section.heading} className="w-4 h-4" />}
+                            <AccordionTrigger className="flex items-center justify-start gap-2 text-gray-700 font-medium">
+                              {/* Safe check for images property */}
+                              {'images' in section && section.images && (
+                                <img src={section.images} alt={section.heading} className="w-4 h-4" />
+                              )}
                               <span>{section.heading}</span>
                             </AccordionTrigger>
                             <AccordionContent>
@@ -709,8 +719,15 @@ const Header: React.FC = () => {
                                     key={i}
                                     className="flex items-center gap-2 text-[#737373] text-[14px] py-2 cursor-pointer border-b border-gray-200 hover:text-[#534ED3]"
                                   >
-                                    {item.img && <img src={item.img} alt={item.title} className="w-5 h-5" />}
-                                    <Link href={item.href} className="flex-1">
+                                    {/* Safe check for img property */}
+                                    {'img' in item && item.img && (
+                                      <img src={item.img} alt={item.title} className="w-5 h-5" />
+                                    )}
+                                    <Link
+                                      href={item.href}
+                                      className="flex-1"
+                                      onClick={() => setIsMobileMenuOpen(false)}
+                                    >
                                       {item.title}
                                     </Link>
                                     <Arrow45 />
@@ -725,6 +742,7 @@ const Header: React.FC = () => {
                   </AccordionItem>
                 ))}
               </Accordion>
+
               {/* CTA Buttons */}
               <div className="mt-10 flex gap-4">
                 <Link
