@@ -60,19 +60,20 @@ export default function Section3({ items }) {
     }
   };
 
-  const getCardStyle = (index) => {
+  const getCardStyle = (index: number): React.CSSProperties => {
     if (index === centerIndex) {
       return {
         transform: `scale(1.05) translateX(0)`,
         filter: "blur(0px)",
         opacity: 1,
         zIndex: 3,
+        pointerEvents: "auto",
       };
     }
     const isLeft = (index + 1) % 3 === centerIndex;
     const isRight = (index + 2) % 3 === centerIndex;
-    if (isLeft) return { transform: `scale(0.9) translateX(-70%)`, filter: "blur(4px)", opacity: 0.6, zIndex: 2 };
-    if (isRight) return { transform: `scale(0.9) translateX(70%)`, filter: "blur(4px)", opacity: 0.6, zIndex: 2 };
+    if (isLeft) return { transform: `scale(0.9) translateX(-70%)`, filter: "blur(4px)", opacity: 0.6, zIndex: 2, pointerEvents: "auto" };
+    if (isRight) return { transform: `scale(0.9) translateX(70%)`, filter: "blur(4px)", opacity: 0.6, zIndex: 2, pointerEvents: "auto" };
     return { opacity: 0, pointerEvents: "none" };
   };
 
